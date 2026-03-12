@@ -1,43 +1,42 @@
 <#
 .SYNOPSIS
-This PowerShell script configures the system to disable AutoPlay for 
-non-volume devices in accordance with Windows 11 STIG WN11-CC-000180.
+    This PowerShell script configures the system to disable AutoPlay for non-volume devices in accordance with Windows 11 STIG WN11-CC-000180.
 
 .DESCRIPTION
-Creates the registry path if it does not exist and ensures the specified
-registry value is present and configured with the expected data required
-for Windows 11 STIG compliance. This remediation implements the policy
-setting "Disallow Autoplay for non-volume devices" by configuring the
-corresponding registry value.
+    Creates the registry path if it does not exist and ensures the specified
+    registry value is present and configured with the expected data required
+    for Windows 11 STIG compliance. This remediation implements the policy
+    setting "Disallow AutoPlay for non-volume devices" by configuring the
+    corresponding registry value.
 
 .NOTES
-Author : Elizabeth Harnisch
-LinkedIn: https://www.linkedin.com/in/elizabeth-harnisch/
-GitHub: https://github.com/elizabeth-a-h
-Date Created : 2026-03-12
-Last Modified : 2026-03-12
-Version : 1.0
+    Author          : Elizabeth Harnisch
+    LinkedIn        : https://www.linkedin.com/in/elizabeth-harnisch/
+    GitHub          : https://github.com/elizabeth-a-h
+    Date Created    : 2026-03-12
+    Last Modified   : 2026-03-12
+    Version         : 1.0
 
-CVEs : N/A
-Plugin IDs : N/A
-STIG-ID : WN11-CC-000180
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN11-CC-000180
 
-Requirements : Run as Administrator (writes to HKLM)
-Reboot Required : No (policy refresh may be required in managed environments)
-GPO/MDM Note : If a Domain GPO or MDM policy manages this setting, it may overwrite local registry changes.
+    Requirements    : Run as Administrator (writes to HKLM)
+    Reboot Required : No (policy refresh may be required in managed environments)
+    GPO/MDM Note    : If a Domain GPO or MDM policy manages this setting, it may overwrite local registry changes.
 
 .TESTED ON
-Date(s) Tested :
-Tested By : 
-Systems Tested : 
-PowerShell Ver. :
+    Date(s) Tested  :
+    Tested By       : Elizabeth Harnisch
+    Systems Tested  : Windows 11
+    PowerShell Ver. : 5.1
 
 .USAGE
-Run the script in an elevated PowerShell session.
+    Run the script in an elevated PowerShell session.
 
-Example syntax:
+    Example syntax:
 
-.\WN11-CC-000180.ps1 -Verbose
+    .\WN11-CC-000180.ps1 -Verbose
 #>
 
 [CmdletBinding()]
@@ -48,17 +47,17 @@ param()
 # =========================
 
 $RegistryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer"
-$ValueName  = "NoAutoplayfornonVolume"
-$ValueType  = "DWord"
-$ValueData  = 1
+$ValueName    = "NoAutoplayfornonVolume"
+$ValueType    = "DWord"
+$ValueData    = 1
 
 # =========================
 # ENSURE REGISTRY PATH EXISTS
 # =========================
 
 if (-not (Test-Path -Path $RegistryPath)) {
-New-Item -Path $RegistryPath -Force | Out-Null
-Write-Verbose "Created registry path: $RegistryPath"
+    New-Item -Path $RegistryPath -Force | Out-Null
+    Write-Verbose "Created registry path: $RegistryPath"
 }
 
 # =========================
@@ -68,29 +67,33 @@ Write-Verbose "Created registry path: $RegistryPath"
 $ExistingProperty = Get-ItemProperty -Path $RegistryPath -Name $ValueName -ErrorAction SilentlyContinue
 
 if ($null -eq $ExistingProperty) {
-New-ItemProperty `
--Path $RegistryPath `
--Name $ValueName `
--Value $ValueData `
--PropertyType $ValueType `
--Force | Out-Null
 
-Write-Verbose "Created registry value '$ValueName' with data '$ValueData'."
+    New-ItemProperty `
+        -Path $RegistryPath `
+        -Name $ValueName `
+        -Value $ValueData `
+        -PropertyType $ValueType `
+        -Force | Out-Null
+
+    Write-Verbose "Created registry value '$ValueName' with data '$ValueData'."
 }
 else {
-$CurrentValue = $ExistingProperty.$ValueName
 
-if ($CurrentValue -ne $ValueData) {
-Set-ItemProperty `
--Path $RegistryPath `
--Name $ValueName `
--Value $ValueData
+    $CurrentValue = $ExistingProperty.$ValueName
 
-Write-Verbose "Updated registry value '$ValueName' from '$CurrentValue' to '$ValueData'."
-}
-else {
-Write-Verbose "Registry value '$ValueName' already configured correctly."
-}
+    if ($CurrentValue -ne $ValueData) {
+
+        Set-ItemProperty `
+            -Path $RegistryPath `
+            -Name $ValueName `
+            -Value $ValueData
+
+        Write-Verbose "Updated registry value '$ValueName' from '$CurrentValue' to '$ValueData'."
+    }
+    else {
+
+        Write-Verbose "Registry value '$ValueName' already configured correctly."
+    }
 }
 
 # =========================
