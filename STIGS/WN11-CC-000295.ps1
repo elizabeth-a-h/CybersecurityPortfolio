@@ -1,43 +1,42 @@
 <#
 .SYNOPSIS
-    This PowerShell script will prevent attachments from being downloaded from RSS feeds.
-    Purpose: STIG/Policy hardening - disable enclosure downloads for IE Feeds
+    This PowerShell script configures the system to prevent attachments from being downloaded from RSS feeds in accordance with Windows 11 STIG WN11-CC-000295.
 
 .DESCRIPTION
     Creates the registry path if it does not exist and ensures the specified
-    registry value is present and configured with the expected data.    
+    registry value is present and configured with the expected data required
+    for Windows 11 STIG compliance. This remediation implements the policy
+    setting that prevents attachments from being downloaded from RSS feeds
+    by configuring the corresponding registry value.
 
 .NOTES
     Author          : Elizabeth Harnisch
-    LinkedIn        : linkedin.com/in/elizabeth-harnisch/
-    GitHub          : github.com/elizabeth-a-h
+    LinkedIn        : https://www.linkedin.com/in/elizabeth-harnisch/
+    GitHub          : https://github.com/elizabeth-a-h
     Date Created    : 2026-03-12
     Last Modified   : 2026-03-12
     Version         : 1.0
+
     CVEs            : N/A
     Plugin IDs      : N/A
     STIG-ID         : WN11-CC-000295
 
     Requirements    : Run as Administrator (writes to HKLM)
     Reboot Required : No (policy refresh may be required in managed environments)
-    GPO/MDM Note    : If a Domain GPO/MDM manages this setting, it may overwrite local changes.
+    GPO/MDM Note    : If a Domain GPO or MDM policy manages this setting, it may overwrite local registry changes.
 
 .TESTED ON
-Date(s) Tested  : 
-Tested By       : 
-Systems Tested  : 
-PowerShell Ver. : 
+    Date(s) Tested  :
+    Tested By       :
+    Systems Tested  :
+    PowerShell Ver. :
 
 .USAGE
+    Run the script in an elevated PowerShell session.
 
-Prevents attachments from being downloaded from RSS feeds by setting:
-HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
-DisableEnclosureDownload (REG_DWORD) = 1
+    Example syntax:
 
-Example syntax:
-
-.\WN11-CC-000295.ps1 -Verbose
-
+    .\WN11-CC-000295.ps1 -Verbose
 #>
 
 [CmdletBinding()]
@@ -47,6 +46,7 @@ param()
 # CONFIGURATION
 # =========================
 
+$STIG         = "WN11-CC-000295"
 $RegistryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds"
 $ValueName    = "DisableEnclosureDownload"
 $ValueType    = "DWord"
@@ -57,11 +57,8 @@ $ValueData    = 1
 # =========================
 
 if (-not (Test-Path -Path $RegistryPath)) {
-
     New-Item -Path $RegistryPath -Force | Out-Null
-
     Write-Verbose "Created registry path: $RegistryPath"
-
 }
 
 # =========================
@@ -80,9 +77,7 @@ if ($null -eq $ExistingProperty) {
         -Force | Out-Null
 
     Write-Verbose "Created registry value '$ValueName' with data '$ValueData'."
-
 }
-
 else {
 
     $CurrentValue = $ExistingProperty.$ValueName
@@ -95,15 +90,11 @@ else {
             -Value $ValueData
 
         Write-Verbose "Updated registry value '$ValueName' from '$CurrentValue' to '$ValueData'."
-
     }
-
     else {
 
         Write-Verbose "Registry value '$ValueName' already configured correctly."
-
     }
-
 }
 
 # =========================
@@ -112,4 +103,9 @@ else {
 
 $VerifiedValue = (Get-ItemProperty -Path $RegistryPath -Name $ValueName).$ValueName
 
-Write-Output "Verified: $RegistryPath\$ValueName = $VerifiedValue"
+if ($VerifiedValue -eq $ValueData) {
+    Write-Output "STIG $STIG: COMPLIANT"
+}
+else {
+    Write-Output "STIG $STIG: NON-COMPLIANT"
+}
