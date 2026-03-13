@@ -107,3 +107,4 @@ if ($VerifiedValue -eq $ValueData) {
 }
 else {
     Write-Output "STIG ${STIG}: NON-COMPLIANT"
+}    
