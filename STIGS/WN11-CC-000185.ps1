@@ -104,8 +104,8 @@ else {
 $VerifiedValue = (Get-ItemProperty -Path $RegistryPath -Name $ValueName).$ValueName
 
 if ($VerifiedValue -eq $ValueData) {
-    Write-Output "STIG $STIG: COMPLIANT"
+    Write-Output "STIG ${STIG}: COMPLIANT"
 }
 else {
-    Write-Output "STIG $STIG: NON-COMPLIANT"
+    Write-Output "STIG ${STIG}: NON-COMPLIANT"
 }
